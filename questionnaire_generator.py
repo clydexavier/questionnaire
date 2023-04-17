@@ -2,6 +2,8 @@ import random
 import json
 import os
 import glob
+import concurrent.futures as futures
+import time
 
 existing_question_and_answer = {}
 user_question_and_answer = {}
@@ -15,7 +17,7 @@ files = glob.glob(f"*{extension}")
 def print_files():
     if(len(files) == 0):
         return 0
-    
+
     else:
         print("Questionares in current directory.")
         for file in files:
@@ -26,12 +28,11 @@ def open_file(filename):
        global existing_question_and_answer
        existing_question_and_answer = json.load(f)
 
-
-
 def save_questions():
     if len(new_question_and_answer) == 0:
         print("No questions to save.")
         return
+
     global filename
     print_files()
     filename = input("Where to save questions?\nAnswer: ")
@@ -54,7 +55,7 @@ def add_question():
 def open_questionaire():
     if print_files() == 0:
         print("No questionaire in current directory.")
-    
+
     questionaire = input("What file to open?\nAnswer: ")
     global filename
     global incorrect_question_and_answer
@@ -70,36 +71,93 @@ def open_questionaire():
     if(num < 0):
         raise ValueError("Input must be a positive number")
 
-    score = 0
-    total_score = num
-    os.system("cls")
-    for i in questions:
-        answer = input("Question: " + i + "\nAnswer: ")
-        answer = answer.strip()
-        if(answer.lower() == existing_question_and_answer[i].lower()):
-            print("Your answer is correct.\n\n")
-            score += 1
-        else:
-            incorrect_question_and_answer[i] = answer
-            print("Your answer is incorrect.\nCorrect answer is: " + existing_question_and_answer[i]+ "\n\n")
+    difficulty = difficultySelection()
+    time_alloted = difficulty * (num/len(existing_question_and_answer)) # Time with respect to number of questions
+    time_alloted = time_alloted + ((difficulty * num) / 60) # (difficulty + num)/60 is typing time offset bonus time
 
-        num -= 1
-        if(num == 0):
-            break
-        
-    print("Tolal score: " + str(score) + "/" + str(min(total_score, len(existing_question_and_answer))))      
-    
+    # os.system('cls')
+    print(f'You are attempting to answer {num} {"question" if num == 1 else "questions"} under {time.strftime("%M minute(s) and %S second(s)", time.gmtime(int(time_alloted))) } minutes')
+    print('Once entered, you cannot exit 🥰, CTRL + C to Exit but will take quite a while since functions cannot be stopped 🥰')
+    print('\n-- Pres ENTER to continute --')
+    input()
+    score = quiz(num, questions, time_alloted)
+
+    print(f'\nQuiz statistics\nScore: {score} out of {num} questions\n')
     check()
 
-def check():
-    print("\n\nQuestions where your answer is incorrect.")
-    global incorrect_question_and_answer
+def difficultySelection():
+    print('Select a time difficulty: ')
+    diff = None
+
+    while not diff:
+        diff = input('[E]asy\n[M]edium\n[H]ard\n\nAnswer: ').lower().strip()
+        if diff not in ['e', 'm', 'h']:
+            diff = None
+            print('Choice not in selection')
+
+    return {'e': 15, 'm' : 10, 'h' : 7}[diff] * 60 # In minutes
+
+def quiz(items_total, questions, time_limit):
     score = 0
+    os.system("cls")
+
+    with futures.ThreadPoolExecutor() as executor:
+        timer = executor.submit(time.sleep, time_limit)
+        start_time = time.monotonic()
+
+        for i in questions:
+            answer: str = ''
+
+            try:
+                answering = executor.submit(input, "Question: " + i + "\nAnswer: ")
+
+                done, not_done = futures.wait([answering, timer], return_when=futures.FIRST_COMPLETED)
+
+                if timer in done and answering in not_done:
+                    raise Exception
+                elif answering in done:
+                    answer = answering.result()
+                    answer = answer.strip()
+
+            except Exception as e:
+                print('\n\n-- Time is up! Answer entered will not be counted --')
+                print("\nCorrect answer is: " + existing_question_and_answer[i] + '\n')
+                print('Press any key to continue. . .')
+                executor.shutdown(wait=False)
+                return score
+
+            if(answer.lower() == existing_question_and_answer[i].lower()):
+                print("Your answer is correct.\n\n")
+                score += 1
+            else:
+                incorrect_question_and_answer[i] = answer
+                print("Your answer is incorrect.\nCorrect answer is: " + existing_question_and_answer[i]+ "\n\n")
+
+            items_total -= 1
+            if(items_total == 0):
+                break
+
+        if timer.running():
+            print(f'Time took to complete quiz: {round(time.monotonic() - start_time, 2)}\nTime left: {time_limit - (round(time.monotonic() - start_time, 2))}\n')
+
+            timer.cancel()
+            executor.shutdown(wait=False, cancel_futures=True)
+
+    return score
+
+
+def check():
+    global incorrect_question_and_answer
+
+    if not incorrect_question_and_answer:
+        return
+
+    print("\nQuestions where your answer is incorrect.")
     for key in incorrect_question_and_answer:
         print("\n\nQuestion: " + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
     incorrect_question_and_answer.clear()
-    print("\n\n")
-    
+    print("\n")
+
 
 def main_prompt():
     ans = input("[A]. Add Question \n[B]. Open Questionaire \n[C]. Save Questions\n[D]. Exit\nAnswer: ")
@@ -119,10 +177,3 @@ if __name__ == "__main__":
     os.system("cls")
     while True:
         main_prompt()
-    
-
-
-
-
-
-
