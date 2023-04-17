@@ -2,13 +2,17 @@ import random
 import json
 import os
 import glob
+<<<<<<< HEAD
 import concurrent.futures as futures
+=======
+>>>>>>> 6c5a7b91e3b0a670db216e2ccc45ae1caeb1f2f8
 import time
 
 existing_question_and_answer = {}
 user_question_and_answer = {}
 new_question_and_answer = {}
 incorrect_question_and_answer = {}
+incorrect_question_num = []
 
 filename =  ""
 extension = ".qs"
@@ -19,7 +23,7 @@ def print_files():
         return 0
 
     else:
-        print("Questionares in current directory.")
+        print("Questionnaires in current directory.")
         for file in files:
             print(file)
 
@@ -52,15 +56,16 @@ def add_question():
     new_question_and_answer[question] = answer
 
 
-def open_questionaire():
+def open_questionnaire():
     if print_files() == 0:
-        print("No questionaire in current directory.")
+        print("No questionnaire in current directory.")
 
-    questionaire = input("What file to open?\nAnswer: ")
+    questionnaire = input("What file to open?\nAnswer: ")
     global filename
     global incorrect_question_and_answer
-    filename = questionaire
-    open_file(questionaire)
+    global incorrect_question_num
+    filename = questionnaire
+    open_file(questionnaire)
 
     questions = existing_question_and_answer.keys()
     questions = list(questions)
@@ -145,27 +150,30 @@ def quiz(items_total, questions, time_limit):
 
     return score
 
-
 def check():
     global incorrect_question_and_answer
 
     if not incorrect_question_and_answer:
         return
 
-    print("\nQuestions where your answer is incorrect.")
+    print("\n\nQuestions where your answer is incorrect.")
+    time.sleep(3)
+
+    i = 0
     for key in incorrect_question_and_answer:
-        print("\n\nQuestion: " + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
+        print("\n\nQuestion "+ str(incorrect_question_num[i]) +"\n\t" + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
+        i += 1
     incorrect_question_and_answer.clear()
     print("\n")
 
 
 def main_prompt():
-    ans = input("[A]. Add Question \n[B]. Open Questionaire \n[C]. Save Questions\n[D]. Exit\nAnswer: ")
+    ans = input("[A]. Add Question \n[B]. Open Questionnaire \n[C]. Save Questions\n[D]. Exit\nAnswer: ")
     ans = ans.upper()
     if ans == 'A':
         add_question()
     elif ans == 'B':
-        open_questionaire()
+        open_questionnaire()
     elif ans == 'C':
         save_questions()
     elif ans == 'D':
