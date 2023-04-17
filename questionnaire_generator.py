@@ -103,6 +103,7 @@ def check():
     i = 0
     for key in incorrect_question_and_answer:
         print("\n\nQuestion "+ str(incorrect_question_num[i]) +"\n\t" + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
+        i+=1
     incorrect_question_and_answer.clear()
     print("\n\n")
     
