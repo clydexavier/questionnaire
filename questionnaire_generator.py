@@ -2,10 +2,7 @@ import random
 import json
 import os
 import glob
-<<<<<<< HEAD
 import concurrent.futures as futures
-=======
->>>>>>> 6c5a7b91e3b0a670db216e2ccc45ae1caeb1f2f8
 import time
 
 existing_question_and_answer = {}
@@ -80,7 +77,7 @@ def open_questionnaire():
     time_alloted = difficulty * (num/len(existing_question_and_answer)) # Time with respect to number of questions
     time_alloted = time_alloted + ((difficulty * num) / 60) # (difficulty + num)/60 is typing time offset bonus time
 
-    # os.system('cls')
+    os.system('cls')
     print(f'You are attempting to answer {num} {"question" if num == 1 else "questions"} under {time.strftime("%M minute(s) and %S second(s)", time.gmtime(int(time_alloted))) } minutes')
     print('Once entered, you cannot exit 🥰, CTRL + C to Exit but will take quite a while since functions cannot be stopped 🥰')
     print('\n-- Pres ENTER to continute --')
