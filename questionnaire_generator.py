@@ -7,6 +7,7 @@ existing_question_and_answer = {}
 user_question_and_answer = {}
 new_question_and_answer = {}
 incorrect_question_and_answer = {}
+incorrect_question_num = []
 
 filename =  ""
 extension = ".qs"
@@ -58,6 +59,7 @@ def open_questionnaire():
     questionnaire = input("What file to open?\nAnswer: ")
     global filename
     global incorrect_question_and_answer
+    global incorrect_question_num  
     filename = questionnaire
     open_file(questionnaire)
 
@@ -72,18 +74,21 @@ def open_questionnaire():
 
     score = 0
     total_score = num
+    question_num = 1
     os.system("cls")
     for i in questions:
-        answer = input("Question: " + i + "\nAnswer: ")
+        answer = input("Question "+ str(question_num)+    ".\n\t" + i + "\nAnswer: ")
         answer = answer.strip()
         if(answer.lower() == existing_question_and_answer[i].lower()):
             print("Your answer is correct.\n\n")
             score += 1
         else:
             incorrect_question_and_answer[i] = answer
+            incorrect_question_num.append(question_num)
             print("Your answer is incorrect.\nCorrect answer is: " + existing_question_and_answer[i]+ "\n\n")
 
         num -= 1
+        question_num += 1
         if(num == 0):
             break
         
@@ -95,8 +100,9 @@ def check():
     print("\n\nQuestions where your answer is incorrect.")
     global incorrect_question_and_answer
     score = 0
+    i = 0
     for key in incorrect_question_and_answer:
-        print("\n\nQuestion: " + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
+        print("\n\nQuestion "+ str(incorrect_question_num[i]) +"\n\t" + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
     incorrect_question_and_answer.clear()
     print("\n\n")
     
