@@ -17,7 +17,7 @@ def print_files():
         return 0
     
     else:
-        print("Questionares in current directory.")
+        print("Questionnaires in current directory.")
         for file in files:
             print(file)
 
@@ -51,15 +51,15 @@ def add_question():
     new_question_and_answer[question] = answer
 
 
-def open_questionaire():
+def open_questionnaire():
     if print_files() == 0:
-        print("No questionaire in current directory.")
+        print("No questionnaire in current directory.")
     
-    questionaire = input("What file to open?\nAnswer: ")
+    questionnaire = input("What file to open?\nAnswer: ")
     global filename
     global incorrect_question_and_answer
-    filename = questionaire
-    open_file(questionaire)
+    filename = questionnaire
+    open_file(questionnaire)
 
     questions = existing_question_and_answer.keys()
     questions = list(questions)
@@ -102,12 +102,12 @@ def check():
     
 
 def main_prompt():
-    ans = input("[A]. Add Question \n[B]. Open Questionaire \n[C]. Save Questions\n[D]. Exit\nAnswer: ")
+    ans = input("[A]. Add Question \n[B]. Open Questionnaire \n[C]. Save Questions\n[D]. Exit\nAnswer: ")
     ans = ans.upper()
     if ans == 'A':
         add_question()
     elif ans == 'B':
-        open_questionaire()
+        open_questionnaire()
     elif ans == 'C':
         save_questions()
     elif ans == 'D':
