@@ -84,7 +84,8 @@ def open_questionnaire():
     input()
     score = quiz(num, questions, time_alloted)
 
-    print(f'\nQuiz statistics\nScore: {score} out of {num} questions\n')
+    os.system("cls")
+    print(f'Quiz statistics\nScore: {score} out of {num} questions\n')
     check()
 
 def difficultySelection():
@@ -100,6 +101,8 @@ def difficultySelection():
     return {'e': 15, 'm' : 10, 'h' : 7}[diff] * 60 # In minutes
 
 def quiz(items_total, questions, time_limit):
+    global incorrect_question_and_answer
+    global incorrect_question_num
     score = 0
     os.system("cls")
 
@@ -107,11 +110,12 @@ def quiz(items_total, questions, time_limit):
         timer = executor.submit(time.sleep, time_limit)
         start_time = time.monotonic()
 
+        j = 1
         for i in questions:
             answer: str = ''
 
             try:
-                answering = executor.submit(input, "Question: " + i + "\nAnswer: ")
+                answering = executor.submit(input, "Question "+ str(j) + "\n\t"+ i + "\nAnswer: ")
 
                 done, not_done = futures.wait([answering, timer], return_when=futures.FIRST_COMPLETED)
 
@@ -123,6 +127,8 @@ def quiz(items_total, questions, time_limit):
 
             except Exception as e:
                 print('\n\n-- Time is up! Answer entered will not be counted --')
+                incorrect_question_num.append(j)
+                incorrect_question_and_answer[i] = answer.lower()
                 print("\nCorrect answer is: " + existing_question_and_answer[i] + '\n')
                 print('Press any key to continue. . .')
                 executor.shutdown(wait=False)
@@ -134,7 +140,10 @@ def quiz(items_total, questions, time_limit):
             else:
                 incorrect_question_and_answer[i] = answer
                 print("Your answer is incorrect.\nCorrect answer is: " + existing_question_and_answer[i]+ "\n\n")
+                incorrect_question_and_answer[i] = answer.lower()
+                incorrect_question_num.append(j)
 
+            j += 1
             items_total -= 1
             if(items_total == 0):
                 break
@@ -153,18 +162,22 @@ def check():
     if not incorrect_question_and_answer:
         return
 
-    print("\n\nQuestions where your answer is incorrect.")
-    time.sleep(3)
+    print("Questions where your answer is incorrect.\n")
 
     i = 0
     for key in incorrect_question_and_answer:
-        print("\n\nQuestion "+ str(incorrect_question_num[i]) +"\n\t" + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
+        print("Question "+ str(incorrect_question_num[i]) +"\n\t" + key + "\nYour answer: " + incorrect_question_and_answer[key] + "\nCorrect answer: " + existing_question_and_answer[key])
+        print("\n")
         i += 1
+
     incorrect_question_and_answer.clear()
-    print("\n")
+
+    print("Press any key to continue. . .")
+    input()
 
 
 def main_prompt():
+    os.system("cls")
     ans = input("[A]. Add Question \n[B]. Open Questionnaire \n[C]. Save Questions\n[D]. Exit\nAnswer: ")
     ans = ans.upper()
     if ans == 'A':
@@ -179,6 +192,5 @@ def main_prompt():
         print("Invalid answer.")
 
 if __name__ == "__main__":
-    os.system("cls")
     while True:
         main_prompt()
