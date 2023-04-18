@@ -2,8 +2,8 @@ import random
 import json
 import os
 import glob
-import concurrent.futures as futures
 import time
+import threading as th
 
 existing_question_and_answer = {}
 user_question_and_answer = {}
@@ -74,31 +74,35 @@ def open_questionnaire():
         raise ValueError("Input must be a positive number")
 
     difficulty = difficultySelection()
-    time_alloted = difficulty * (num/len(existing_question_and_answer)) # Time with respect to number of questions
-    time_alloted = time_alloted + ((difficulty * num) / 60) # (difficulty + num)/60 is typing time offset bonus time
-
+    
     os.system('cls')
-    print(f'You are attempting to answer {num} {"question" if num == 1 else "questions"} under {time.strftime("%M minute(s) and %S second(s)", time.gmtime(int(time_alloted))) } minutes')
-    print('Once entered, you cannot exit 🥰, CTRL + C to Exit but will take quite a while since functions cannot be stopped 🥰')
+    print(f'You are attempting to answer {num} {"question" if num == 1 else "questions"}. You can answer each question in under {difficulty} {"second" if difficulty == 1 else "seconds."} ')
     print('\n-- Pres ENTER to continute --')
     input()
-    score = quiz(num, questions, time_alloted)
+    score = quiz(num, questions, difficulty)
 
     os.system("cls")
     print(f'Quiz statistics\nScore: {score} out of {num} questions\n')
     check()
 
 def difficultySelection():
-    print('Select a time difficulty: ')
+    print('Select a time difficulty')
+    print('Answer each question in: ')
     diff = None
 
     while not diff:
-        diff = input('[E]asy\n[M]edium\n[H]ard\n\nAnswer: ').lower().strip()
+        easy = 45
+        med = 20
+        difficult = 10
+        diff = input('[E]asy - '+str(easy)+ ' seconds. \n[M]edium - '+str(med)+' seconds\n[H]ard - '+ str(difficult)+' seconds\n\nAnswer: ').lower().strip()
         if diff not in ['e', 'm', 'h']:
             diff = None
             print('Choice not in selection')
 
-    return {'e': 15, 'm' : 10, 'h' : 7}[diff] * 60 # In minutes
+    return {'e': 45, 'm' : 20, 'h' : 10}[diff] # In minutes
+
+def foo():
+    pass
 
 def quiz(items_total, questions, time_limit):
     global incorrect_question_and_answer
@@ -106,54 +110,39 @@ def quiz(items_total, questions, time_limit):
     score = 0
     os.system("cls")
 
-    with futures.ThreadPoolExecutor() as executor:
-        timer = executor.submit(time.sleep, time_limit)
-        start_time = time.monotonic()
+    question_num = 1
+    answered = 0
+    for i in questions:
+        S = th.Timer(time_limit, foo)
+        S.start()
+        
+        answer = input("Question "+ str(question_num)+    ".\n\t" + i + "\nAnswer: ")
+        answer = answer.strip()
+        if answer.lower() == existing_question_and_answer[i].lower() and S.is_alive():
+            print("Your answer is correct.\n\n")
+            score += 1
 
-        j = 1
-        for i in questions:
-            answer: str = ''
+        elif answer.lower() != existing_question_and_answer[i].lower() and S.is_alive(): 
+            incorrect_question_and_answer[i] = answer
+            incorrect_question_num.append(question_num)
+            print("Your answer is incorrect.\nCorrect answer is: " + existing_question_and_answer[i]+ "\n\n")
 
-            try:
-                answering = executor.submit(input, "Question "+ str(j) + "\n\t"+ i + "\nAnswer: ")
+        else:
+            incorrect_question_and_answer[i] = "Time's up."
+            incorrect_question_num.append(question_num)
+            print("Time's up.\n\n")
 
-                done, not_done = futures.wait([answering, timer], return_when=futures.FIRST_COMPLETED)
+        S.cancel()
+            
+    
+        question_num += 1
+        items_total -= 1
 
-                if timer in done and answering in not_done:
-                    raise Exception
-                elif answering in done:
-                    answer = answering.result()
-                    answer = answer.strip()
+        if items_total == 0:
+            break
+        
 
-            except Exception as e:
-                print('\n\n-- Time is up! Answer entered will not be counted --')
-                incorrect_question_num.append(j)
-                incorrect_question_and_answer[i] = answer.lower()
-                print("\nCorrect answer is: " + existing_question_and_answer[i] + '\n')
-                print('Press any key to continue. . .')
-                executor.shutdown(wait=False)
-                return score
-
-            if(answer.lower() == existing_question_and_answer[i].lower()):
-                print("Your answer is correct.\n\n")
-                score += 1
-            else:
-                incorrect_question_and_answer[i] = answer
-                print("Your answer is incorrect.\nCorrect answer is: " + existing_question_and_answer[i]+ "\n\n")
-                incorrect_question_and_answer[i] = answer.lower()
-                incorrect_question_num.append(j)
-
-            j += 1
-            items_total -= 1
-            if(items_total == 0):
-                break
-
-        if timer.running():
-            print(f'Time took to complete quiz: {round(time.monotonic() - start_time, 2)}\nTime left: {time_limit - (round(time.monotonic() - start_time, 2))}\n')
-
-            timer.cancel()
-            executor.shutdown(wait=False, cancel_futures=True)
-
+        
     return score
 
 def check():
