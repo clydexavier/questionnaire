@@ -15,9 +15,6 @@ filename =  ""
 extension = ".qs"
 files = glob.glob(f"*{extension}")
 
-with open("appdevenum.qs", 'w') as f:
-    json.dump(new_question_and_answer , f)
-
 def print_files():
     if(len(files) == 0):
         return 0
